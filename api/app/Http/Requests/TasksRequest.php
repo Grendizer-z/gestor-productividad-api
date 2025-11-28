@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class TasksRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,11 +21,11 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        $contactId=$this->route('contacts');
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'email_verified_at' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'title' => 'required|string|max:255',
+            'due_date' => 'required|string|max:300',
+            'is_completed' => 'required|bool|max:300',
         ];
     }
 
@@ -43,12 +43,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name.required' => 'El nombre es obligatorio.',
-            'email.required' => 'El correo electrónico es obligatorio.',
-            'email.email' => 'El correo electrónico debe ser válido.',
-            'email.unique' => 'Este correo electrónico ya está registrado.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'due_date.required' => 'la fecha es obligatoria.',
         ];
     }
 }
