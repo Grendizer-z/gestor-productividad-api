@@ -3,63 +3,127 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TasksRequest;
+use App\Http\Resources\TasksResource;
+use App\Models\Tasks;
 use Illuminate\Http\Request;
 
 class TasksController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $Tasks = $request->user()
+            ->Tasks()
+            ->orderBy('nombre')
+            ->orderBy('apellido')
+            ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data' => TasksResource::collection($Tasks)->response()->getData()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(TasksRequest $request)
     {
-        //
+        $Tasks = $request->user()->Tasks()->create($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proyecto creado exitosamente',
+            'data' => new TasksResource($Tasks)
+        ], 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(Request $request, Tasks $Tasks)
     {
-        //
+        // Verificar que el Tasks pertenece al usuario autenticado
+        if ($Tasks->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Proyecto no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => new TasksResource($Tasks)
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(TasksRequest $request, Tasks $Tasks)
     {
-        //
+        // Verificar que el Proyecto pertenece al usuario autenticado
+        if ($Tasks->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Proyecto no encontrado'
+            ], 404);
+        }
+
+        $Tasks->update($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proyecto actualizado exitosamente',
+            'data' => new TasksResource($Tasks)
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Request $request, Tasks $Tasks)
     {
-        //
+        // Verificar que el Tasks pertenece al usuario autenticado
+        if ($Tasks->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Proyecto no encontrado'
+            ], 404);
+        }
+
+        $Tasks->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proyecto eliminado exitosamente'
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function search(Request $request)
     {
-        //
-    }
+        $query = $request->get('q');
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        if (!$query) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parámetro de búsqueda requerido'
+            ], 400);
+        }
+
+        $Tasks = $request->user()
+            ->Tasks()
+            ->where(function ($queryBuilder) use ($query) {
+                $queryBuilder->where('nombre', 'like', "%{$query}%")
+                    ->orWhere('apellido', 'like', "%{$query}%")
+                    ->orWhere('telefono', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->orderBy('nombre')
+            ->orderBy('apellido')
+            ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'Tasks' => TasksResource::collection($Tasks),
+                'pagination' => [
+                    'current_page' => $Tasks->currentPage(),
+                    'per_page' => $Tasks->perPage(),
+                    'total' => $Tasks->total(),
+                    'last_page' => $Tasks->lastPage(),
+                    'from' => $Tasks->firstItem(),
+                    'to' => $Tasks->lastItem(),
+                ]
+            ]
+        ]);
     }
 }
