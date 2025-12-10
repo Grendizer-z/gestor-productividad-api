@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
     });
 
-    // Rutas de contactos
+    // Rutas
     Route::apiResource('Projects', ProjectsController::class);
     Route::get('Projects/search', [ProjectsController::class, 'search'])->name('Projects.search');
 
