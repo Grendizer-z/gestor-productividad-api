@@ -22,13 +22,27 @@ class ProjectsRequest extends FormRequest
      */
     public function rules(): array
     {
-        $projectId=$this->route('projects');
+        // Obtener el método HTTP actual
+        $method = $this->method();
+
+        if ($method === 'PATCH' || $method === 'PUT') {
+            // Para PATCH/PUT, todos los campos son opcionales (usando 'sometimes')
+            return [
+                'name' => ['sometimes', 'string', 'max:255'],
+                'description' => ['sometimes', 'nullable', 'string'],
+                'is_archived' => ['sometimes', 'boolean'],
+            ];
+        }
+
+        // Reglas para POST (creación)
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'required|string|max:300',
-            'is_archived' => 'required|bool|max:300',
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'is_archived' => ['nullable', 'boolean'],
         ];
     }
+
+
 
     public function expectsJson(): bool
     {

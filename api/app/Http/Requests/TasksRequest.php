@@ -21,12 +21,27 @@ class TasksRequest extends FormRequest
      */
     public function rules(): array
     {
-        $contactId=$this->route('contacts');
-        return [
-            'title' => 'required|string|max:255',
-            'due_date' => 'required|string|max:300',
-            'is_completed' => 'required|bool|max:300',
-        ];
+        $taskId=$this->route('tasks');
+        // Detecta si es update (PATCH/PUT) o store (POST)
+        if ($this->isMethod('post')) {
+            return [
+                'projects_id'   => 'required|exists:projects,id',
+                'title'         => 'required|string|max:255',
+                'due_date'      => 'nullable|date',
+                'is_completed'  => 'required|boolean',
+            ];
+        }
+
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            return [
+                'projects_id'   => 'sometimes|exists:projects,id',
+                'title'         => 'sometimes|string|max:255',
+                'due_date'      => 'sometimes|date',
+                'is_completed'  => 'sometimes|boolean',
+            ];
+        }
+
+        return [];
     }
 
     public function expectsJson(): bool

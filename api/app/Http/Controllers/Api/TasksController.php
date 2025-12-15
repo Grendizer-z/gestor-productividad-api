@@ -7,15 +7,14 @@ use App\Http\Requests\TasksRequest;
 use App\Http\Resources\TasksResource;
 use App\Models\Tasks;
 use Illuminate\Http\Request;
+use App\Models\Projects;
 
 class TasksController extends Controller
 {
-    public function index(Request $request)
+    public function index(Projects $projects)
     {
-        $Tasks = $request->user()
-            ->Tasks()
-            ->orderBy('nombre')
-            ->orderBy('apellido')
+        $Tasks = $projects->Tasks()
+            ->orderBy('title')
             ->paginate(15);
 
         return response()->json([
@@ -26,12 +25,12 @@ class TasksController extends Controller
 
     public function store(TasksRequest $request)
     {
-        $Tasks = $request->user()->Tasks()->create($request->validated());
+        $task = Tasks::create($request->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Proyecto creado exitosamente',
-            'data' => new TasksResource($Tasks)
+            'message' => 'Tarea creada exitosamente',
+            'data'    => new TasksResource($task)
         ], 201);
     }
 
@@ -51,36 +50,41 @@ class TasksController extends Controller
         ]);
     }
 
-    public function update(TasksRequest $request, Tasks $Tasks)
+    // Cambiar Tasks $tasks a Tasks $Task
+    public function update(TasksRequest $request, Tasks $Task)
     {
-        // Verificar que el Proyecto pertenece al usuario autenticado
-        if ($Tasks->user_id !== $request->user()->id) {
+        // Verificar que la tarea tenga proyecto y que el proyecto pertenezca al usuario autenticado
+        // Asegúrese de usar $Task en lugar de $tasks en todo el cuerpo de la función
+        if (!$Task->project || $Task->project->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proyecto no encontrado'
             ], 404);
         }
 
-        $Tasks->update($request->validated());
+        $Task->update($request->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Proyecto actualizado exitosamente',
-            'data' => new TasksResource($Tasks)
+            'message' => 'Tarea actualizada exitosamente',
+            'data' => new TasksResource($Task)
         ]);
     }
 
-    public function destroy(Request $request, Tasks $Tasks)
+
+
+
+    public function destroy(Request $request, Tasks $Task)
     {
         // Verificar que el Tasks pertenece al usuario autenticado
-        if ($Tasks->user_id !== $request->user()->id) {
+        if ($Task->project->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proyecto no encontrado'
             ], 404);
         }
 
-        $Tasks->delete();
+        $Task->delete();
 
         return response()->json([
             'success' => true,

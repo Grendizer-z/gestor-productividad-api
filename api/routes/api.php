@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ProjectsController;
 use App\Http\Controllers\Api\TasksController;
 use Illuminate\Support\Facades\Route;
 
+
 // Rutas públicas de autenticación
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);

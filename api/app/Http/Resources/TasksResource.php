@@ -16,7 +16,7 @@ class TasksResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'project_id' => $this->project_id,
+            'projects_id' => $this->projects_id,
             'title' => $this->title,
             'due_date' => $this->due_date,
             'is_completed' => $this->is_completed,

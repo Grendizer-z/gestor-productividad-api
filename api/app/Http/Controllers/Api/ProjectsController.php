@@ -7,6 +7,7 @@ use App\Http\Requests\ProjectsRequest;
 use App\Http\Resources\ProjectsResource;
 use App\Models\Projects;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectsController extends Controller
 {
@@ -14,8 +15,7 @@ class ProjectsController extends Controller
     {
         $Projects = $request->user()
             ->Projects()
-            ->orderBy('nombre')
-            ->orderBy('apellido')
+            ->orderBy('name')
             ->paginate(15);
 
         return response()->json([
@@ -35,10 +35,12 @@ class ProjectsController extends Controller
         ], 201);
     }
 
-    public function show(Request $request, Projects $Projects)
+    public function show(Request $request, Projects $Project)
     {
+        //dd($Project);
+
         // Verificar que el Projects pertenece al usuario autenticado
-        if ($Projects->user_id !== $request->user()->id) {
+        if ($Project->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proyecto no encontrado'
@@ -47,40 +49,52 @@ class ProjectsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new ProjectsResource($Projects)
+            'data' => new ProjectsResource($Project)
         ]);
     }
 
-    public function update(ProjectsRequest $request, Projects $Projects)
+    public function update(Request $request, Projects $Project)
     {
+        //dd($request->all());
         // Verificar que el Proyecto pertenece al usuario autenticado
-        if ($Projects->user_id !== $request->user()->id) {
+        if ($Project->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proyecto no encontrado'
             ], 404);
         }
 
-        $Projects->update($request->validated());
+        // Validación manual para PATCH
+        $validatedData = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'is_archived' => ['sometimes', 'integer', 'in:0,1'], // <-- CAMBIO CLAVE
+        ]);
+
+        // Usamos los datos validados manualmente
+        $Project->update($validatedData);
+
+        $Project->refresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Proyecto actualizado exitosamente',
-            'data' => new ProjectsResource($Projects)
+            'data' => new ProjectsResource($Project)
         ]);
     }
 
-    public function destroy(Request $request, Projects $Projects)
+
+    public function destroy(Request $request, Projects $Project)
     {
         // Verificar que el Projects pertenece al usuario autenticado
-        if ($Projects->user_id !== $request->user()->id) {
+        if ($Project->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proyecto no encontrado'
             ], 404);
         }
 
-        $Projects->delete();
+        $Project->delete();
 
         return response()->json([
             'success' => true,

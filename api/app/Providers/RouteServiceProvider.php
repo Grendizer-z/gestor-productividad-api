@@ -28,6 +28,9 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        Route::model('Projects', \App\Models\Projects::class);
+        Route::model('Tasks', \App\Models\Tasks::class);
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
