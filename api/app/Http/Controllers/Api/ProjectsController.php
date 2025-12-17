@@ -86,6 +86,7 @@ class ProjectsController extends Controller
 
     public function destroy(Request $request, Projects $Project)
     {
+        //dd($Project->user_id, $request->user()->id);
         // Verificar que el Projects pertenece al usuario autenticado
         if ($Project->user_id !== $request->user()->id) {
             return response()->json([

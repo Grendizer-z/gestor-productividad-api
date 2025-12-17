@@ -11,17 +11,20 @@ use App\Models\Projects;
 
 class TasksController extends Controller
 {
-    public function index(Projects $projects)
-    {
-        $Tasks = $projects->Tasks()
-            ->orderBy('title')
-            ->paginate(15);
+    public function index(Request $request)
+{
+    $Tasks = Tasks::whereHas('project', function ($q) use ($request) {
+            $q->where('user_id', $request->user()->id);
+        })
+        ->orderBy('title')
+        ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => TasksResource::collection($Tasks)->response()->getData()
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => TasksResource::collection($Tasks)->response()->getData()
+    ]);
+}
+
 
     public function store(TasksRequest $request)
     {
